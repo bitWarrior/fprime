@@ -195,7 +195,7 @@ DDDTHH
 ddl
 ddmm
 dealloc
-debian
+Debian
 deconstructor
 Deerin
 defaultgen
@@ -247,6 +247,7 @@ DPWRITER
 DRAINBUFFERS
 drv
 dspal
+Dstate
 Duerschmid
 duey
 dumparch
@@ -346,6 +347,7 @@ gencode
 genfile
 GENHUB
 genshi
+getblocks
 getchildren
 getcontext
 getdata
@@ -470,6 +472,7 @@ jdperez
 jenkins
 jenkinsci
 jishii
+Joaquim
 jobrestrictions
 joshuaa
 jpl
@@ -594,6 +597,7 @@ nogen
 noncomma
 NONINFRINGEMENT
 noparent
+norecords
 normalwidths
 NOSIZE
 NOSPEC
@@ -663,6 +667,7 @@ parseable
 PASSIVERATEGROUP
 PASSIVERATEGROUPIMPLTESTER
 pathmaker
+patsubst
 pbuild
 pcmake
 pcomp
@@ -817,6 +822,7 @@ SENDPARTIAL
 seqgen
 serializables
 setaffinity
+setblocks
 setdata
 setid
 setinheritsched
@@ -842,6 +848,7 @@ showinitializer
 sideeffect
 sighandler
 Signedness
+Silveira
 sinc
 Sinha
 sloc
@@ -949,6 +956,7 @@ Thhmmss
 thiscol
 thisdirdoesnotexist
 thisfiledoesnotexist
+Thu
 timebase
 timerfd
 timetag
