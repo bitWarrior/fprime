@@ -877,6 +877,97 @@ namespace Svc {
 
     }
 
+    void CommandDispatcherImplTester::runCommandQueueOverflow() {
+
+        U8 testNumCmdsToOverflow = 15;
+
+        // verify dispatch table is empty
+        for (NATIVE_UINT_TYPE entry = 0; entry < FW_NUM_ARRAY_ELEMENTS(this->m_impl.m_entryTable); entry++) {
+            ASSERT_TRUE(this->m_impl.m_entryTable[entry].used == false);
+        }
+
+        // verify sequence tracker table is empty
+        for (NATIVE_UINT_TYPE entry = 0; entry < FW_NUM_ARRAY_ELEMENTS(this->m_impl.m_sequenceTracker); entry++) {
+            ASSERT_TRUE(this->m_impl.m_sequenceTracker[entry].used == false);
+        }
+        // clear reg events
+        this->clearEvents();
+        // register built-in commands
+        this->m_impl.regCommands();
+        // verify registrations
+        ASSERT_TRUE(this->m_impl.m_entryTable[0].used);
+        ASSERT_EQ(this->m_impl.m_entryTable[0].opcode,CommandDispatcherImpl::OPCODE_CMD_NO_OP);
+        ASSERT_EQ(this->m_impl.m_entryTable[0].port,1);
+
+        ASSERT_TRUE(this->m_impl.m_entryTable[1].used);
+        ASSERT_EQ(this->m_impl.m_entryTable[1].opcode,CommandDispatcherImpl::OPCODE_CMD_NO_OP_STRING);
+        ASSERT_EQ(this->m_impl.m_entryTable[1].port,1);
+
+        ASSERT_EVENTS_OpCodeRegistered(0,CommandDispatcherImpl::OPCODE_CMD_NO_OP,1,0);
+        ASSERT_EVENTS_OpCodeRegistered(1,CommandDispatcherImpl::OPCODE_CMD_NO_OP_STRING,1,1);
+
+        // First, send NO_OP command to verify can send a command
+        this->m_seqStatusRcvd = false;
+        Fw::ComBuffer buff;
+        ASSERT_EQ(buff.serialize(static_cast<FwPacketDescriptorType>(Fw::ComPacket::FW_PACKET_COMMAND)),Fw::FW_SERIALIZE_OK);
+        ASSERT_EQ(buff.serialize(static_cast<FwOpcodeType>(CommandDispatcherImpl::OPCODE_CMD_NO_OP)),Fw::FW_SERIALIZE_OK);
+        this->clearEvents();
+        this->invoke_to_seqCmdBuff(0,buff,12);
+        ASSERT_EQ(Fw::QueuedComponentBase::MSG_DISPATCH_OK,this->m_impl.doDispatch());
+        ASSERT_EVENTS_SIZE(1);
+        ASSERT_EVENTS_OpCodeDispatched_SIZE(1);
+        ASSERT_EVENTS_OpCodeDispatched(0,CommandDispatcherImpl::OPCODE_CMD_NO_OP,1);
+        ASSERT_EQ(Fw::QueuedComponentBase::MSG_DISPATCH_OK,this->m_impl.doDispatch());
+        ASSERT_EQ(Fw::QueuedComponentBase::MSG_DISPATCH_OK,this->m_impl.doDispatch());
+        ASSERT_TRUE(this->m_seqStatusRcvd);
+        ASSERT_EQ(CommandDispatcherImpl::OPCODE_CMD_NO_OP,this->m_seqStatusOpCode);
+        ASSERT_EQ(12u,this->m_seqStatusCmdSeq);
+        ASSERT_EQ(this->m_seqStatusCmdResponse,Fw::CmdResponse::OK);
+
+        // Now flood CmdDispatcher with a series of NOOP commands until the command queue overlfows
+        for (U8 numCmds = 1; numCmds <= testNumCmdsToOverflow; numCmds++){
+
+            printf("**** NumCmds ---> %d\n",numCmds);
+            this->m_seqStatusRcvd = false;
+
+            ASSERT_EQ(buff.serialize(static_cast<FwPacketDescriptorType>(Fw::ComPacket::FW_PACKET_COMMAND)),Fw::FW_SERIALIZE_OK);
+            ASSERT_EQ(buff.serialize(static_cast<FwOpcodeType>(CommandDispatcherImpl::OPCODE_CMD_NO_OP)),Fw::FW_SERIALIZE_OK);
+            this->invoke_to_seqCmdBuff(0,buff,12);
+        }
+
+        printf(" -- eventHistory_OpCodeDispatched event count = %d\n",
+            this->eventHistory_OpCodeDispatched->size());
+        printf(" -- CommandDroppedQueueOverflow event count = %d\n",
+            this->eventHistory_CommandDroppedQueueOverflow->size());
+
+        // Verify at least one Queue Overflow EVR was generated
+        ASSERT_GT(this->eventHistory_CommandDroppedQueueOverflow->size(), 0);
+
+        // Dispatch commands remaining in the Command queue to verify the queue overflow did not impact
+        // commanding.
+        ASSERT_EQ(Fw::QueuedComponentBase::MSG_DISPATCH_OK,this->m_impl.doDispatch());
+        ASSERT_EVENTS_OpCodeDispatched(0,CommandDispatcherImpl::OPCODE_CMD_NO_OP,1);
+        ASSERT_EQ(Fw::QueuedComponentBase::MSG_DISPATCH_OK,this->m_impl.doDispatch());
+        ASSERT_EQ(Fw::QueuedComponentBase::MSG_DISPATCH_OK,this->m_impl.doDispatch());
+        ASSERT_EQ(CommandDispatcherImpl::OPCODE_CMD_NO_OP,this->m_seqStatusOpCode);
+        ASSERT_EQ(12u,this->m_seqStatusCmdSeq);
+        ASSERT_EQ(this->m_seqStatusCmdResponse,Fw::CmdResponse::OK);
+        this->m_seqStatusRcvd = false;
+
+
+
+        
+        printf("-------\n");
+        printf(" -- eventHistory_OpCodeDispatched event count = %d\n",
+            this->eventHistory_OpCodeDispatched->size());
+        printf(" -- eventHistory_OpCodeCompleted event count = %d\n",
+            this->eventHistory_OpCodeCompleted->size());
+        printf(" -- CommandDroppedQueueOverflow event count = %d\n",
+            this->eventHistory_CommandDroppedQueueOverflow->size());
+
+        
+    }
+
     void CommandDispatcherImplTester::from_pingOut_handler(
               const FwIndexType portNum, /*!< The port number*/
               U32 key /*!< Value to return to pinger*/

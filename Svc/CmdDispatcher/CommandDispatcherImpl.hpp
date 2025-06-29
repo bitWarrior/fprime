@@ -118,6 +118,15 @@ namespace Svc {
             //!  \param opCode the CLEAR_TRACKING opcode.
             //!  \param cmdSeq the assigned sequence number for the command
             void CMD_CLEAR_TRACKING_cmdHandler(FwOpcodeType opCode, U32 cmdSeq);
+            //!  \brief Called when the command sequence queue overflows
+            //!
+            //!  Generate event to the user that the command queue overflowed and the
+            //!  command will not be processed.
+            //!
+            //!  \param portNum the number of the incoming port.
+            //!  \param data the buffer containing the command.
+            //!  \param context call value defined by user
+            void seqCmdBuff_overflowHook(FwIndexType portNum, Fw::ComBuffer& data, U32 context);
 
             //! \struct DispatchEntry
             //! \brief table used to store opcode to port mappings

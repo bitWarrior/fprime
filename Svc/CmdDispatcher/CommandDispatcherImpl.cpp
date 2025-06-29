@@ -195,4 +195,16 @@ namespace Svc {
         this->pingOut_out(0,key);
     }
 
+    void CommandDispatcherImpl::seqCmdBuff_overflowHook(FwIndexType portNum, Fw::ComBuffer& data, U32 context){
+        // Extract command opcode
+        Fw::CmdPacket cmdPkt;
+        Fw::SerializeStatus stat = cmdPkt.deserialize(data);
+        U32 opcode = 0xDEADBEEF; // Note: 0xDEADBEEF = unable to extract cmd opcode       
+
+        if (stat == Fw::FW_SERIALIZE_OK){
+            opcode = cmdPkt.getOpCode();
+        }
+
+        this->log_ACTIVITY_HI_CommandDroppedQueueOverflow(opcode,context);
+    }
 }

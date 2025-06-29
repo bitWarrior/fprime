@@ -26,6 +26,7 @@ namespace Svc {
             void runOverflowCommands();
             void runNopCommands();
             void runClearCommandTracking();
+            void runCommandQueueOverflow();
 
         private:
             Svc::CommandDispatcherImpl& m_impl;
