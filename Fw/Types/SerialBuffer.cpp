@@ -42,8 +42,9 @@ SerializeStatus SerialBuffer ::pushBytes(const U8* const addr, const FwSizeType 
     return this->serializeFrom(const_cast<U8*>(addr), n, Fw::Serialization::OMIT_LENGTH);
 }
 
-SerializeStatus SerialBuffer ::popBytes(U8* const addr, FwSizeType n) {
-    return this->deserializeTo(addr, n, Fw::Serialization::OMIT_LENGTH);
+SerializeStatus SerialBuffer ::popBytes(U8* const addr, FwSizeType capacity, FwSizeType n) {
+    FwSizeType length_in_out = n; 
+    return this->deserializeTo(addr, n, length_in_out, Fw::Serialization::OMIT_LENGTH);   
 }
 
 }  // namespace Fw

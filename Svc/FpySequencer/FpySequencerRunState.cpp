@@ -170,8 +170,9 @@ Fw::Success FpySequencer::deserializeDirective(const Fpy::Statement& stmt, Direc
             }
 
             // okay, it will fit. put it in
+            FwSizeType length_in_out = cmdArgBufSize;
             status = argBuf.deserializeTo(deserializedDirective.constCmd.get_argBuf(), cmdArgBufSize,
-                                          Fw::Serialization::OMIT_LENGTH);
+                                          length_in_out, Fw::Serialization::OMIT_LENGTH);
 
             if (status != Fw::SerializeStatus::FW_SERIALIZE_OK) {
                 this->log_WARNING_HI_DirectiveDeserializeError(stmt.get_opCode(), this->currentStatementIdx(), status,
@@ -301,8 +302,9 @@ Fw::Success FpySequencer::deserializeDirective(const Fpy::Statement& stmt, Direc
             }
 
             // okay, it will fit. put it in
+            FwSizeType length_in_out = bufSize;
             status =
-                argBuf.deserializeTo(deserializedDirective.pushVal.get_val(), bufSize, Fw::Serialization::OMIT_LENGTH);
+                argBuf.deserializeTo(deserializedDirective.pushVal.get_val(), bufSize, length_in_out, Fw::Serialization::OMIT_LENGTH);
 
             if (status != Fw::SerializeStatus::FW_SERIALIZE_OK) {
                 this->log_WARNING_HI_DirectiveDeserializeError(stmt.get_opCode(), this->currentStatementIdx(), status,

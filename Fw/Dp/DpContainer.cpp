@@ -70,7 +70,8 @@ Fw::SerializeStatus DpContainer::deserializeHeader() {
     if (status == Fw::FW_SERIALIZE_OK) {
         const FwSizeType requestedSize = sizeof this->m_userData;
         FwSizeType receivedSize = requestedSize;
-        status = deserializer.deserializeTo(this->m_userData, receivedSize, Fw::Serialization::OMIT_LENGTH);
+        FwSizeType length_in_out = receivedSize;
+        status = deserializer.deserializeTo(this->m_userData, receivedSize, length_in_out, Fw::Serialization::OMIT_LENGTH);
         if (receivedSize != requestedSize) {
             status = Fw::FW_DESERIALIZE_SIZE_MISMATCH;
         }

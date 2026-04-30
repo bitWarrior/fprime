@@ -103,12 +103,14 @@ SerializeStatus StringBase::deserializeFrom(SerialBufferBase& buffer, Fw::Endian
     // Deserialize length
     // Fail if length exceeds max size (the initial value of actualSize)
     // Otherwise deserialize length bytes and set actualSize to length
-    SerializeStatus stat = buffer.deserializeTo(reinterpret_cast<U8*>(raw), actualSize, Serialization::INCLUDE_LENGTH);
+    FwSizeType actualLength = 0;
+    SerializeStatus stat = buffer.deserializeTo(reinterpret_cast<U8*>(raw), actualSize, actualLength, Serialization::INCLUDE_LENGTH);
     if (stat == FW_SERIALIZE_OK) {
         // Deserialization succeeded: null-terminate string at actual size
-        FW_ASSERT(actualSize <= maxSize, static_cast<FwAssertArgType>(actualSize),
+        FW_ASSERT(actualLength <= maxSize, static_cast<FwAssertArgType>(actualLength),
                   static_cast<FwAssertArgType>(maxSize));
-        raw[actualSize] = 0;
+        raw[actualLength] = 0;
+       
     } else {
         // Deserialization failed: leave string unmodified, but ensure that it
         // is null-terminated

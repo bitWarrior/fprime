@@ -298,8 +298,9 @@ Fw::SerializeStatus CmdSequencerComponentImpl::FPrimeSequence ::copyCommand(Fw::
     comBuffer.resetSer();
     FwSizeType size = recordSize;
     Fw::SerializeStatus status = comBuffer.setBuffLen(recordSize);
+    FwSizeType length_in_out = size;
     FW_ASSERT(status == Fw::FW_SERIALIZE_OK, status);
-    status = buffer.deserializeTo(comBuffer.getBuffAddr(), size, Fw::Serialization::OMIT_LENGTH);
+    status = buffer.deserializeTo(comBuffer.getBuffAddr(), size, length_in_out, Fw::Serialization::OMIT_LENGTH);
     return status;
 }
 

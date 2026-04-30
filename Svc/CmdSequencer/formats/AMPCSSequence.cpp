@@ -338,7 +338,8 @@ Fw::SerializeStatus AMPCSSequence ::translateCommand(Fw::ComBuffer& comBuffer, c
     U8* const addr = comBuffer.getBuffAddr();
     FW_ASSERT(addr != nullptr);
     // true means "don't serialize the length"
-    status = buffer.deserializeTo(&addr[fixedBuffLen], size, Fw::Serialization::OMIT_LENGTH);
+    FwSizeType length_in_out = size;
+    status = buffer.deserializeTo(&addr[fixedBuffLen], size, length_in_out, Fw::Serialization::OMIT_LENGTH);
     return status;
 }
 

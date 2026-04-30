@@ -515,54 +515,48 @@ SerializeStatus LinearBufferBase::deserializeTo(F32& val, Endianness mode) {
     return FW_SERIALIZE_OK;
 }
 
-SerializeStatus LinearBufferBase::deserializeTo(U8* buff, Serializable::SizeType& length, Endianness endianMode) {
+SerializeStatus LinearBufferBase::deserializeTo(U8* buff,
+                                                FwSizeType buffCapacity,
+                                                Serializable::SizeType& length,
+                                                Endianness endianMode) {
     FwSizeType length_in_out = static_cast<FwSizeType>(length);
-    SerializeStatus status = this->deserializeTo(buff, length_in_out, Serialization::INCLUDE_LENGTH, endianMode);
+    SerializeStatus status = this->deserializeTo(buff, buffCapacity, length_in_out, Serialization::INCLUDE_LENGTH, endianMode);
     length = static_cast<Serializable::SizeType>(length_in_out);
     return status;
 }
 
 SerializeStatus LinearBufferBase::deserializeTo(U8* buff,
+                                                FwSizeType buffCapacity,
                                                 Serializable::SizeType& length,
                                                 Serialization::t lengthMode,
                                                 Endianness endianMode) {
-    FW_ASSERT(this->getBuffAddr());
-
-    if (lengthMode == Serialization::INCLUDE_LENGTH) {
-        FwSizeStoreType storedLength = 0;
-
-        SerializeStatus stat = this->deserializeTo(storedLength, endianMode);
-
-        if (stat != FW_SERIALIZE_OK) {
-            return stat;
-        }
-
-        // make sure it fits
-        if ((storedLength > this->getDeserializeSizeLeft()) or (storedLength > length)) {
-            return FW_DESERIALIZE_SIZE_MISMATCH;
-        }
-
-        if (storedLength > 0) {
-            FW_ASSERT(buff);
-        }
-        (void)memcpy(buff, &this->getBuffAddr()[this->m_deserLoc], static_cast<size_t>(storedLength));
-
-        length = static_cast<FwSizeType>(storedLength);
-
-    } else {
-        // make sure enough is left
-        if (length > this->getDeserializeSizeLeft()) {
-            return FW_DESERIALIZE_SIZE_MISMATCH;
-        }
-
-        if (length > 0) {
-            FW_ASSERT(buff);
-        }
-        (void)memcpy(buff, &this->getBuffAddr()[this->m_deserLoc], static_cast<size_t>(length));
+    // Validate buff: a non-null pointer is required whenever data will be copied.
+    if (buff == nullptr && buffCapacity > 0) {
+        return FW_DESERIALIZE_SIZE_MISMATCH;
     }
 
-    this->m_deserLoc += static_cast<Serializable::SizeType>(length);
-    return FW_SERIALIZE_OK;
+    // Validate buffCapacity independently: a zero-capacity destination cannot
+    // accept any data. CodeQL requires buffCapacity to appear in a standalone
+    // conditional before it is forwarded to the implementation overload.
+    if (buffCapacity == 0 && length > static_cast<Serializable::SizeType>(0)) {
+        return FW_DESERIALIZE_SIZE_MISMATCH;
+    }
+
+    // Validate buff is non-null whenever buffCapacity > 0, and buffCapacity
+    // is sufficient to hold the requested length.
+    FW_ASSERT(buffCapacity >= static_cast<FwSizeType>(length),
+              static_cast<FwAssertArgType>(buffCapacity),
+              static_cast<FwAssertArgType>(length));
+
+    // endianMode is an enum; an out-of-range value indicates a caller bug.
+    FW_ASSERT(endianMode == Endianness::BIG || endianMode == Endianness::LITTLE,
+              static_cast<FwAssertArgType>(endianMode));
+
+    FwSizeType length_in_out = static_cast<FwSizeType>(length);
+    SerializeStatus status =
+        this->deserializeTo(buff, buffCapacity, length_in_out, Serialization::INCLUDE_LENGTH, endianMode);
+    length = static_cast<Serializable::SizeType>(length_in_out);
+    return status;
 }
 
 SerializeStatus LinearBufferBase::deserializeTo(Serializable& val, Endianness mode) {
@@ -930,19 +924,10 @@ SerializeStatus LinearBufferBase::deserialize(void*& val) {
     return this->deserializeTo(val);
 }
 
-// Deprecated method for backward compatibility
-SerializeStatus LinearBufferBase::deserialize(U8* buff, FwSizeType& length, bool noLength) {
-    const Serialization::t mode = noLength ? Serialization::OMIT_LENGTH : Serialization::INCLUDE_LENGTH;
-    return this->deserializeTo(buff, length, mode);
-}
-
-SerializeStatus LinearBufferBase::deserialize(U8* buff, FwSizeType& length) {
-    return this->deserializeTo(buff, length, Serialization::INCLUDE_LENGTH);
-}
-
-SerializeStatus LinearBufferBase::deserialize(U8* buff, FwSizeType& length, Serialization::t mode) {
-    return this->deserializeTo(buff, length, mode);
-}
+// NOTE: The deprecated deserialize(U8* buff, ...) overloads have been removed.
+// They could not be safely forwarded to deserializeTo() after the addition of
+// the buffCapacity parameter. Callers must migrate to:
+//   deserializeTo(buff, buffCapacity, length, lengthMode)
 
 SerializeStatus LinearBufferBase::deserialize(Serializable& val) {
     return this->deserializeTo(val);
