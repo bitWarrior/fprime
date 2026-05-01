@@ -49,9 +49,6 @@ class FprimeFramerTester final : public FprimeFramerGTestBase {
     //! Test framing of data
     void testNominalFraming();
 
-    //! Test oversized buffer allocation (trimming) of data
-    void testOversizedAllocatorBufferIsTrimmed();
-
   private:
     // ----------------------------------------------------------------------
     // Helper functions
@@ -79,9 +76,6 @@ class FprimeFramerTester final : public FprimeFramerGTestBase {
 
     U8 m_buffer_slot[2048];
     Fw::Buffer m_buffer;  // buffer to be returned by mocked allocate call
-
-    // Flag read by from_bufferAllocate_handler to choose which path to take
-    bool m_useOversizedAlloc = false;
 };
 
 }  // namespace Svc

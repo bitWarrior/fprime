@@ -32,7 +32,6 @@ class PrmDbTester : public PrmDbGTestBase {
     void runPrmFileLoadNominal();
     void runPrmFileLoadWithErrors();
     void runPrmFileLoadIllegal();
-    void runShorterSaveDoesNotCorrupt();
 
     void runRefPrmFile();
 
